@@ -19,7 +19,7 @@
 
 ## User-directed glass restyle
 
-The supplied visual reference supersedes the original light-first color direction. The UI now defaults to smoked green glass over a locally rendered, blurred woodland backdrop. Desktop uses a floating navigation capsule with a white active pill; mobile uses matching top and bottom capsules. Search is available directly from the navigation. Light mode remains available, with its preference stored at `kollab:glass-theme`. Surfaces share one glass material family and retain solid reduced-transparency fallbacks. The SVG backdrop is local, so this change adds no dependency or remote image request.
+The supplied visual reference established the floating glass navigation, white active pill, and soft translucent material system. Search is available directly from the navigation. A later visual direction replaced the woodland scene with the permanent light wordmark backdrop described below. Surfaces share one glass material family and retain solid reduced-transparency fallbacks.
 
 ## Opinion search and expanded reviews
 
@@ -29,4 +29,8 @@ Review cards now open a portalled, centered dialog that springs from the clicked
 
 ## White brand backdrop
 
-The latest user request replaces the landscape with a white canvas and a large centered yellow `kollab.` wordmark, softened beneath a translucent layer. Light glass is now the default and uses neutral ink with restrained yellow accents for legibility. The separate `kollab:wordmark-theme` preference prevents a previously saved dark-forest preference from hiding this requested design on refresh. The background is decorative, fixed, locally rendered in Geist, ignored by assistive technology, and hidden for reduced-transparency preferences and printing.
+The landscape was replaced with a large centered yellow `kollab.` wordmark, softened beneath a translucent layer. A later direction made the light treatment permanent: there is no theme state, preference, or switch. The background is decorative, fixed, locally rendered in Geist, ignored by assistive technology, and hidden for reduced-transparency preferences and printing.
+
+## Permanent light mode and mobile navigation
+
+Kollab now renders with `data-theme="light"` at the document root. Mobile no longer compresses the desktop navigation or hides destinations. The top capsule becomes a utility bar for search, notifications, and account access, while a five-item bottom capsule exposes Discover, Reviews, Rooms, Rates, and Saved at 320px and above. Brand results use a single readable column on mobile, key controls keep touch-sized targets, and call-to-action layouts expand to the available width.

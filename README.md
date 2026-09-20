@@ -45,9 +45,9 @@ To connect a backend:
 
 ## Design and scope
 
-The latest user-provided visual reference takes precedence: the current UI uses smoked green glass, a locally rendered woodland backdrop, and floating pill navigation with white active tabs. A light variant is available from the theme toggle. The restyle is isolated in `app/glass.css`.
+The latest user-provided direction takes precedence: Kollab now ships in permanent light mode with frosted glass, a blurred yellow `kollab.` backdrop, and floating pill navigation. Desktop exposes all five destinations in the top capsule. Mobile uses a compact utility bar plus a five-item bottom navigation so Discover, Reviews, Rooms, Rates, and Saved are always reachable. Mobile brand cards expand to the full viewport width for readable text and reliable tap targets. The final theme overrides live in `app/wordmark-backdrop.css`.
 
-Both `kollab-build-prompt-v2.md` and `kollab-frontend-first.md` are implemented with the latter taking precedence. The main brief arrived during development and the app was revised to its cool translucent material system, self-hosted Geist, blue interaction accent, semantic trust scale, dark mode, and mobile bottom sheets. See `DESIGN.md` and `DECISIONS.md` for assumptions and the mocked service boundaries.
+Both `kollab-build-prompt-v2.md` and `kollab-frontend-first.md` are implemented with the latter taking precedence. The main brief arrived during development and the app was revised to its translucent material system, self-hosted Geist, semantic trust scale, and mobile bottom sheets. See `DESIGN.md` and `DECISIONS.md` for assumptions and the mocked service boundaries.
 
 The seven-step review wizard collects brand/agency, month, deal terms, deliverables, payment outcome, rights, ratings, an optional note and in-memory proof, ending in the exact anonymous public-card preview. Brand pages offer overview/reviews/rates/discussion. Rooms support local posts, comments, helpful votes, and reports. Share cards support screenshots, copy-link, and native sharing / print fallback. Rate filter URLs are persistent.
 

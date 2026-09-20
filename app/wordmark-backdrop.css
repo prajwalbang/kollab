@@ -210,7 +210,7 @@ body::before {
   );
   background-size: 200% 100%;
 }
-/* Dark controls remain optional; the requested white branded canvas stays behind them. */
+/* The light branded canvas is the permanent product theme. */
 [data-theme="dark"] .brand-backdrop::after {
   background: rgba(18, 30, 24, 0.46);
 }
@@ -264,5 +264,119 @@ body::before {
 @media print {
   .brand-backdrop {
     display: none;
+  }
+}
+
+@media (max-width: 650px) {
+  .glass-masthead {
+    padding: 18px 17px 12px;
+  }
+  .glass-masthead .wordmark {
+    font-size: 28px;
+  }
+  .glass-masthead > span {
+    max-width: 120px;
+    line-height: 1.35;
+  }
+  .topbar {
+    width: max-content;
+    max-width: calc(100vw - 28px);
+    height: 56px;
+    margin: 0 14px 12px auto;
+    padding: 7px 9px;
+    justify-content: flex-end;
+  }
+  .topbar .glass-nav {
+    display: none;
+  }
+  .topbar .top-actions {
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .topbar .nav-search,
+  .topbar .notification-wrap > .icon-button,
+  .topbar .signin {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+  }
+  .topbar .notification-wrap {
+    display: block;
+  }
+  .topbar .signin {
+    font-size: 0;
+  }
+  .topbar .signin svg {
+    width: 18px;
+    height: 18px;
+  }
+  .nav-search-panel {
+    top: calc(100% + 8px);
+    right: 0;
+  }
+  main {
+    padding: 0 16px;
+  }
+  .hero-copy {
+    padding-top: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(37px, 11vw, 44px);
+  }
+  .brand-grid {
+    grid-template-columns: 1fr;
+  }
+  .brand-card {
+    padding: 19px 18px 0;
+  }
+  .brand-title {
+    font-size: 15px;
+  }
+  .handle {
+    font-size: 10px;
+  }
+  .brand-card-bottom,
+  .brand-card-bottom button {
+    font-size: 9px;
+  }
+  .section-heading {
+    flex-wrap: wrap;
+  }
+  .section-heading .text-button,
+  .section-heading .primary-button {
+    margin-top: 0;
+  }
+  .contribute-banner > button {
+    width: 100%;
+    margin: 4px 0 18px;
+  }
+  .banner-privacy {
+    left: 18px;
+    bottom: 14px;
+  }
+  .mobile-nav {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    min-height: 64px;
+    padding: 6px;
+    gap: 2px;
+  }
+  .mobile-nav button {
+    min-width: 0;
+    min-height: 50px;
+    padding: 5px 2px;
+    font-size: 8px;
+  }
+  .mobile-nav button svg {
+    width: 18px;
+    height: 18px;
+  }
+  footer {
+    padding-bottom: 150px;
   }
 }

@@ -160,17 +160,15 @@ const assert = require("node:assert/strict");
   await page.getByRole("button", { name: "Send report" }).click();
   await page.getByRole("heading", { name: "Report saved" }).waitFor();
   console.log("PASS rooms, comments, helpful votes, reporting");
-  const previousTheme = await page.locator("html").getAttribute("data-theme");
-  await page.getByRole("button", { name: "Toggle dark mode" }).click();
-  assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
-  await page.screenshot({ path: "/private/tmp/kollab-dark-mobile.png" });
+  assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
+  await page.screenshot({ path: "/private/tmp/kollab-light-mobile.png" });
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth,
     ),
     false,
   );
-  console.log("PASS dark mode and 390px overflow");
+  console.log("PASS permanent light mode and 390px overflow");
   assert.deepEqual(errors, []);
   console.log("PASS no browser errors");
   await browser.close();

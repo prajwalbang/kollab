@@ -334,7 +334,6 @@ export default function Kollab({
     [expanded, setExpanded] = useState(false),
     [sort, setSort] = useState("popular"),
     [notices, setNotices] = useState<Notification[]>([]),
-    [dark, setDark] = useState(false),
     [navSearch, setNavSearch] = useState(false),
     [communityQuery, setCommunityQuery] = useState(""),
     [savedQuery, setSavedQuery] = useState(""),
@@ -428,11 +427,6 @@ export default function Kollab({
       document.removeEventListener("keydown", handler);
     };
   }, [modal]);
-  useEffect(() => {
-    const stored = localStorage.getItem("kollab:wordmark-theme") === "dark";
-    setDark(stored);
-    document.documentElement.dataset.theme = stored ? "dark" : "light";
-  }, []);
   useEffect(() => {
     const pop = () => {
       const slug = withoutBasePath(window.location.pathname).match(
@@ -550,22 +544,6 @@ export default function Kollab({
               >
                 <Icon name="search" size={24} />
               </button>
-              <button
-                className="theme-button"
-                aria-label="Toggle dark mode"
-                onClick={() => {
-                  setDark(!dark);
-                  document.documentElement.dataset.theme = !dark
-                    ? "dark"
-                    : "light";
-                  localStorage.setItem(
-                    "kollab:wordmark-theme",
-                    !dark ? "dark" : "light",
-                  );
-                }}
-              >
-                {dark ? "☀" : "☾"}
-              </button>
               <span className="india">
                 <span /> Built for Indian creators
               </span>
@@ -611,7 +589,7 @@ export default function Kollab({
               </div>
               <button className="signin" onClick={() => setModal("auth")}>
                 {session ? session.alias : "Sign in"}
-                <Icon name={session ? "check" : "arrow"} size={16} />
+                <Icon name="users" size={16} />
               </button>
             </div>
             {navSearch && (
@@ -1146,6 +1124,7 @@ export default function Kollab({
         <nav className="mobile-nav">
           {[
             ["discover", "grid", "Discover"],
+            ["reviews", "edit", "Reviews"],
             ["rooms", "users", "Rooms"],
             ["rates", "chart", "Rates"],
             ["watchlist", "bookmark", "Saved"],
