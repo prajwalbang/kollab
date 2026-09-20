@@ -2,3 +2,5 @@ node_modules
 .next
 out
 *.tsbuildinfo
+heepsy/
+indian_microcreators_master.csv
