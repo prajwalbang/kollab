@@ -7,7 +7,6 @@
   --glass-shadow: inset 0 1px 0 #ffffff50, 0 12px 36px #1027210d;
   --glass-ink: #20352d;
   --glass-muted: #53665e;
-  --glass-wallpaper-opacity: 0.16;
   --glass-page: #dbe4dc;
   --sidebar: 0px;
 }
@@ -30,23 +29,11 @@
   --glass-shadow: inset 0 1px 0 #ffffff0d, 0 12px 36px #001b1718;
   --glass-ink: #f2f5ef;
   --glass-muted: #bbc8c0;
-  --glass-wallpaper-opacity: 0.72;
   --glass-page: #10231e;
 }
 body {
   background: var(--glass-page);
   color: var(--glass-ink);
-}
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(11, 29, 23, 0.08), rgba(9, 24, 20, 0.5)),
-    url("/glass-backdrop.svg") center top/cover no-repeat;
-  opacity: var(--glass-wallpaper-opacity);
-  pointer-events: none;
-  z-index: -1;
 }
 .app-shell {
   isolation: isolate;
@@ -1160,14 +1147,8 @@ footer button {
     padding: 0 12px;
   }
 }
-/* Searchable community surfaces and a quieter mist-covered landscape. */
-body::before {
-  background:
-    linear-gradient(180deg, rgba(8, 25, 24, 0.08), rgba(8, 24, 23, 0.38)),
-    url("/glass-backdrop.svg") center center/cover no-repeat;
-}
+/* Searchable community surfaces. */
 [data-theme="dark"] {
-  --glass-wallpaper-opacity: 0.9;
   --glass-panel: rgba(45, 68, 62, 0.38);
   --glass-raised: rgba(65, 87, 76, 0.48);
 }
