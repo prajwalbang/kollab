@@ -2,3 +2,5 @@ node_modules
 .next
 out
 *.tsbuildinfo
+# Local creator research data. Keep this file on disk and out of the public repo.
+indian_microcreators_master.csv
