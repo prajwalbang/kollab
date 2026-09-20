@@ -1,0 +1,268 @@
+/* A white canvas with the brand sitting underneath a sheet of frosted glass. */
+body {
+  isolation: isolate;
+  background: #fff;
+}
+body::before {
+  content: none;
+}
+.brand-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  background: #fff;
+}
+.brand-backdrop > span {
+  display: block;
+  font-family: Geist, Arial, sans-serif;
+  font-size: clamp(120px, 29vw, 480px);
+  font-weight: 850;
+  letter-spacing: -0.085em;
+  line-height: 1;
+  padding-right: 0.08em;
+  color: #f5cd21;
+  transform: translateY(-2%);
+  filter: blur(11px);
+  opacity: 0.67;
+  white-space: nowrap;
+}
+.brand-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+[data-theme="light"] {
+  --bg: #fff;
+  --paper: #fdfdfb;
+  --ink: #242620;
+  --muted: #686b62;
+  --orange: #555b43;
+  --line: rgba(49, 51, 39, 0.1);
+  --glass-page: #fff;
+  --glass-ink: #292b23;
+  --glass-muted: #6e7166;
+  --glass-panel: rgba(255, 255, 255, 0.52);
+  --glass-raised: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(87, 86, 61, 0.13);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 30px rgba(52, 52, 26, 0.035);
+  --mat-thin: rgba(255, 255, 255, 0.52);
+  --mat-regular: rgba(255, 255, 255, 0.66);
+  --mat-thick: rgba(255, 255, 253, 0.88);
+  --good: #3e7657;
+  --caution: #9e751f;
+  --bad: #b44f42;
+}
+[data-theme="light"] .topbar {
+  background: rgba(237, 238, 232, 0.58);
+  border-color: rgba(109, 111, 88, 0.14);
+  box-shadow:
+    inset 0 1px 1px #fff,
+    0 8px 30px #31351e08;
+  backdrop-filter: blur(32px) saturate(145%);
+  -webkit-backdrop-filter: blur(32px) saturate(145%);
+}
+[data-theme="light"] .glass-nav > button {
+  color: #72776c;
+}
+[data-theme="light"] .glass-nav > button.active {
+  background: #fff;
+  color: #252920;
+  box-shadow: 0 3px 12px #2835190c;
+}
+[data-theme="light"] .glass-nav > button:hover {
+  color: #252920;
+  background: #ffffff50;
+}
+[data-theme="light"] .glass-nav > button.active:hover {
+  background: #fff;
+}
+[data-theme="light"] .topbar .top-actions {
+  border-color: #52584120;
+}
+[data-theme="light"] .topbar .icon-button,
+[data-theme="light"] .topbar .theme-button {
+  color: #636956;
+}
+[data-theme="light"] .topbar .signin {
+  background: #ffffff80;
+  color: #424936;
+  border: 1px solid #ffffffa0;
+}
+[data-theme="light"] .search-input,
+[data-theme="light"] .content-search {
+  background: rgba(255, 255, 255, 0.54);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(24px) saturate(130%);
+}
+[data-theme="light"] .search-go {
+  background: #efe5a9 !important;
+  color: #434832;
+}
+[data-theme="light"] .preview-heading > .demo-tag {
+  background: #7774440a;
+  color: var(--glass-muted);
+}
+[data-theme="light"] .preview-meter {
+  background: #79744d12;
+}
+[data-theme="light"] .primary-button,
+[data-theme="light"] .contribute-banner > button {
+  background: #f2df83;
+  color: #3d402c;
+  box-shadow:
+    inset 0 1px 0 #fff6,
+    0 3px 10px #8b79270d;
+}
+[data-theme="light"] .primary-button:hover,
+[data-theme="light"] .contribute-banner > button:hover {
+  background: #ebd36a;
+}
+[data-theme="light"] .category-tabs button.selected,
+[data-theme="light"] .chip.selected {
+  background: rgba(237, 223, 151, 0.55);
+  color: #4e523a;
+}
+[data-theme="light"] .category-tabs button:hover,
+[data-theme="light"] .chip:hover {
+  background: #efe7bf60;
+  color: #4e523a;
+}
+[data-theme="light"] .brand-tags > span,
+[data-theme="light"] .brand-tags > span:nth-child(2) {
+  background: #ffffff3b;
+}
+[data-theme="light"] .review-rate,
+[data-theme="light"] .review-card details,
+[data-theme="light"] .review-card > p {
+  color: var(--glass-muted);
+}
+[data-theme="light"] .semantic-badge.good {
+  background: #528b5d0c;
+  color: #46764e;
+}
+[data-theme="light"] .semantic-badge.caution {
+  background: #b995350f;
+  color: #8c6c22;
+}
+[data-theme="light"] .frosted-gate:after {
+  background: rgba(255, 255, 250, 0.61);
+}
+[data-theme="light"] .frosted-shapes > i {
+  background: #6f755e26;
+}
+[data-theme="light"] .frosted-shapes > i:nth-child(even) {
+  background: #c4b35b35;
+}
+[data-theme="light"] .banner-flower {
+  color: #c8b966;
+}
+[data-theme="light"] .bio-code code,
+[data-theme="light"] .auth-benefits {
+  background: #e7dfb014;
+  color: #67704c;
+}
+[data-theme="light"] .notifications {
+  background: rgba(252, 252, 247, 0.94);
+}
+[data-theme="light"] .search-results {
+  background: rgba(253, 253, 248, 0.97);
+  backdrop-filter: blur(30px);
+}
+[data-theme="light"] .review-focus {
+  background: rgba(250, 250, 241, 0.96);
+}
+[data-theme="light"] .review-focus-top {
+  background: rgba(250, 250, 241, 0.98);
+}
+[data-theme="light"] .mobile-nav {
+  background: rgba(233, 234, 222, 0.65);
+  border-color: #8f937728;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 8px 35px #484e2212;
+}
+[data-theme="light"] .mobile-nav button {
+  color: #767c65;
+}
+[data-theme="light"] .mobile-nav button.active {
+  color: #303d29;
+  background: #fff;
+}
+[data-theme="light"] .toast {
+  background: #f4edc9;
+  color: #44482d;
+}
+[data-theme="light"] .skeleton {
+  background: linear-gradient(
+    100deg,
+    #eeeeea80 30%,
+    #fffffff0 50%,
+    #eeeeea80 70%
+  );
+  background-size: 200% 100%;
+}
+/* Dark controls remain optional; the requested white branded canvas stays behind them. */
+[data-theme="dark"] .brand-backdrop::after {
+  background: rgba(18, 30, 24, 0.46);
+}
+@media (max-width: 650px) {
+  .brand-backdrop > span {
+    font-size: 31vw;
+    letter-spacing: -0.09em;
+  }
+  .brand-backdrop::after {
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+  .brand-backdrop > span {
+    filter: blur(4px);
+  }
+  [data-theme="light"] .topbar .signin {
+    background: #ffffff85;
+  }
+  [data-theme="light"] .content-search input::placeholder {
+    color: #7a7e70;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .brand-backdrop {
+    display: none;
+  }
+  [data-theme="light"] .topbar,
+  [data-theme="light"] .mobile-nav,
+  [data-theme="light"] .search-input,
+  [data-theme="light"] .content-search {
+    background: #f4f4ec;
+    backdrop-filter: none;
+  }
+  [data-theme="light"] .brand-card,
+  [data-theme="light"] .review-card,
+  [data-theme="light"] .hero-art.product-preview,
+  [data-theme="light"] .contribute-banner {
+    background: #fff;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .brand-backdrop > span {
+    filter: blur(12px);
+  }
+  [data-theme="light"] .topbar,
+  [data-theme="light"] .brand-card,
+  [data-theme="light"] .review-card {
+    background: #f7f7f1;
+  }
+}
+@media print {
+  .brand-backdrop {
+    display: none;
+  }
+}

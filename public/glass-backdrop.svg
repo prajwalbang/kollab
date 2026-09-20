@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1500" viewBox="0 0 2000 1500">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#314d4b"/><stop offset=".45" stop-color="#687c67"/><stop offset="1" stop-color="#182e2e"/></linearGradient>
+<radialGradient id="glow"><stop stop-color="#d3c6a2" stop-opacity=".75"/><stop offset=".5" stop-color="#c0c4a2" stop-opacity=".25"/><stop offset="1" stop-color="#b2bba2" stop-opacity="0"/></radialGradient>
+<linearGradient id="ridge" x2="0" y2="1"><stop stop-color="#2d504b"/><stop offset="1" stop-color="#102b29"/></linearGradient>
+<linearGradient id="front" x2="0" y2="1"><stop stop-color="#244640"/><stop offset="1" stop-color="#0e2426"/></linearGradient>
+<filter id="mist"><feGaussianBlur stdDeviation="48"/></filter><filter id="distant"><feGaussianBlur stdDeviation="13"/></filter><filter id="soft"><feGaussianBlur stdDeviation="4"/></filter>
+</defs>
+<path fill="url(#sky)" d="M0 0h2000v1500H0z"/>
+<ellipse cx="1440" cy="180" rx="1050" ry="740" fill="url(#glow)"/>
+<g filter="url(#distant)"><path d="M-100 600C200 660 350 170 750 340S1300 710 1650 300 2100 310 2100 310V1500H-100Z" fill="#496b60"/><path d="M-100 810C250 740 580 560 920 620S1510 280 2110 440V1500H-100Z" fill="#3b6058"/></g>
+<path d="M-100 1030C230 1010 570 370 1010 530S1510 810 2110 550V1500H-100Z" fill="url(#ridge)" filter="url(#soft)"/>
+<path d="M-100 1120C420 880 740 990 1050 800S1690 730 2110 920V1500H-100Z" fill="url(#front)"/>
+<path d="M-100 1330C480 1100 970 1250 1240 1120S1800 950 2110 1100V1500H-100Z" fill="#122d2d"/>
+<g filter="url(#mist)" fill="none"><path d="M-100 720C450 990 870 390 1480 540S2000 630 2130 500" stroke="#b7c4ab" stroke-width="85" opacity=".17"/><path d="M300 1120C760 1030 1130 670 1890 800" stroke="#9fb8a7" stroke-width="110" opacity=".12"/></g>
+</svg>

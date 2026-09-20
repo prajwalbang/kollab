@@ -1,0 +1,28 @@
+{
+  "name": "kollab",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/data.cjs"
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "tailwindcss": "^4",
+    "@tailwindcss/postcss": "^4",
+    "framer-motion": "latest",
+    "zod": "latest",
+    "fuse.js": "latest"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest"
+  }
+}
