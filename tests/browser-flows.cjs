@@ -144,7 +144,7 @@ const assert = require("node:assert/strict");
     .getByRole("button", { name: "Rooms", exact: true })
     .click();
   await page
-    .getByLabel(/Posting as/)
+    .getByLabel('Your experience', { exact: true })
     .fill("How do you agree to a reasonable number of revision rounds?");
   await page.getByRole("button", { name: "Post to the room" }).click();
   await page.locator(".room-card").waitFor();

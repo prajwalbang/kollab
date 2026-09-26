@@ -11,6 +11,7 @@ import type {
   RoomPost,
   Notification,
   FollowerBand,
+  IdentityMode,
 } from "./types";
 export interface KollabRepo {
   searchBrands(query: string, limit?: number): Promise<Brand[]>;
@@ -34,9 +35,9 @@ export interface KollabRepo {
     category: string;
     city: string | null;
   }): Promise<Session>;
-  listPosts(category: string): Promise<RoomPost[]>;
-  createPost(category: string, body: string): Promise<RoomPost>;
-  comment(postId: string, body: string): Promise<void>;
+  listPosts(category: string, query?: string): Promise<RoomPost[]>;
+  createPost(category: string, body: string, identityMode?: IdentityMode): Promise<RoomPost>;
+  comment(postId: string, body: string, identityMode?: IdentityMode): Promise<void>;
   vote(targetId: string): Promise<boolean>;
   report(targetId: string, reason: string): Promise<void>;
   getNotifications(): Promise<Notification[]>;

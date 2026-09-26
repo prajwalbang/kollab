@@ -1,3 +1,5 @@
 import type { KollabRepo } from "./repo";
 import { mockRepo } from "./mock-repo";
-export const repo: KollabRepo = mockRepo;
+import { httpRepo } from "./http-repo";
+import { liveData } from "./mode";
+export const repo: KollabRepo = liveData ? httpRepo : mockRepo;

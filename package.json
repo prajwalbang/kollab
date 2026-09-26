@@ -7,22 +7,29 @@
     "build": "next build --webpack",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/data.cjs"
+    "test": "node --test tests/data.cjs tests/database.cjs tests/security.cjs",
+    "test:browser": "node tests/browser-flows.cjs && node tests/search-detail.cjs && node tests/live-ui.cjs"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.0",
+    "@tailwindcss/postcss": "^4",
+    "framer-motion": "latest",
+    "fuse.js": "latest",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4",
-    "@tailwindcss/postcss": "^4",
-    "framer-motion": "latest",
-    "zod": "latest",
-    "fuse.js": "latest"
+    "zod": "latest"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@electric-sql/pglite": "^0.5.8",
+    "@playwright/test": "^1.63.0",
     "@types/node": "latest",
     "@types/react": "latest",
-    "@types/react-dom": "latest"
+    "@types/react-dom": "latest",
+    "typescript": "^5"
   }
 }

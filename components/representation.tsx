@@ -1,0 +1,15 @@
+"use client";
+import { useState } from 'react';
+import { dataRequest } from '@/lib/data/http-repo';
+import type { Brand,Review } from '@/lib/data/types';
+export function Representation(){
+  const [query,setQuery]=useState(''),[brands,setBrands]=useState<Brand[]>([]),[brand,setBrand]=useState<Brand|null>(null),[reviews,setReviews]=useState<Review[]>([]),[review,setReview]=useState(''),[evidence,setEvidence]=useState(''),[body,setBody]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
+  async function task(fn:()=>Promise<void>){setBusy(true);setMessage('');try{await fn();}catch(e){setMessage(e instanceof Error?e.message:'Please try again.');}finally{setBusy(false);}}
+  return <div className="account-forms"><h1>Represent your company</h1><p>Sign in first. A moderator independently verifies your authority before you can submit an official response. Claiming a company does not give access to private creator identities or evidence.</p><a href="/account/">Account / sign in</a>
+    <form onSubmit={e=>{e.preventDefault();void task(async()=>{setBrands(await dataRequest<Brand[]>('searchBrands',{query}));});}}><label>Find your company<input required maxLength={120} value={query} onChange={e=>setQuery(e.target.value)}/></label><button className="outline-button" disabled={busy}>Search</button></form>
+    <div className="operation-actions">{brands.map(b=><button className="outline-button" key={b.id} disabled={busy} onClick={()=>void task(async()=>{setBrand(b);setReview('');setReviews(await dataRequest<Review[]>('representativeReviews',{company_id:b.id}));})}>{b.name}</button>)}</div>
+    {brand&&<><h2>{brand.name}</h2><form onSubmit={e=>{e.preventDefault();void task(async()=>{await dataRequest('claimBrand',{company_id:brand.id,evidence},true);setMessage('Claim submitted for manual verification.');setEvidence('');});}}><label>How can we independently verify your authority?<textarea required minLength={20} maxLength={2000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></label><p>Provide company contact details or a public reference. Do not paste passwords, ID documents or access tokens.</p><button className="primary-button" disabled={busy}>Request company verification</button></form>
+    <form onSubmit={e=>{e.preventDefault();void task(async()=>{await dataRequest('reply',{review_id:review,body},true);setMessage('Response submitted for moderation.');setBody('');});}}><h2>Official response</h2><p>Available after your claim is approved. Responses must not identify an anonymous creator.</p><label>Review<select required value={review} onChange={e=>setReview(e.target.value)}><option value="">Choose a review</option>{reviews.map(r=><option key={r.id} value={r.id}>{r.collab_month} · {(r.body||r.payment_status).slice(0,80)}</option>)}</select></label><label>Response<textarea required minLength={5} maxLength={1200} value={body} onChange={e=>setBody(e.target.value)}/></label><button className="primary-button" disabled={busy||!review}>Submit response</button></form></>}
+    {message&&<p role="status">{message}</p>}
+  </div>;
+}

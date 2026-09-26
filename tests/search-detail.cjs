@@ -102,7 +102,7 @@ const assert = require("node:assert/strict");
     .getByRole("button", { name: "Rooms", exact: true })
     .click();
   await page
-    .getByLabel(/Posting as/)
+    .getByLabel('Your experience', { exact: true })
     .fill("How do you negotiate usage rights for six months?");
   await page.getByRole("button", { name: "Post to the room" }).click();
   await page.locator(".room-card").waitFor();
@@ -120,7 +120,7 @@ const assert = require("node:assert/strict");
   console.log("PASS Rooms search");
   await page.setViewportSize({ width: 390, height: 844 });
   await page
-    .locator(".glass-nav")
+    .locator(".mobile-nav")
     .getByRole("button", { name: "Reviews", exact: true })
     .click();
   await page

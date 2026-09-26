@@ -16,7 +16,7 @@ import {
 } from "./types";
 import type { KollabRepo } from "./repo";
 type StoredReview = CollabReview &
-  Pick<Review, "follower_band" | "category" | "region" | "reply" | "demo"> & {
+  Pick<Review, "follower_band" | "category" | "region" | "reply" | "demo" | "attribution_handle"> & {
     creator_city: string | null;
   };
 type Store = {
@@ -217,6 +217,8 @@ export const mockRepo: KollabRepo = {
       throw new Error("Add at least one deliverable.");
     const r: StoredReview = {
       ...valid,
+      identity_mode: valid.identity_mode || "anonymous",
+      attribution_handle: valid.identity_mode === "attributed" && valid.attribution_consent ? s.session.handle : null,
       id: crypto.randomUUID(),
       user_id: s.session.id,
       created_at: new Date().toISOString(),
@@ -350,6 +352,7 @@ export const mockRepo: KollabRepo = {
             follower_band: "10k_25k",
             category: "Beauty",
             city: "Mumbai",
+            verified: true,
           };
     write(s);
     return s.session;
@@ -363,7 +366,7 @@ export const mockRepo: KollabRepo = {
   async listPosts(category) {
     return read().posts.filter((p) => p.category === category);
   },
-  async createPost(category, body) {
+  async createPost(category, body, identityMode = "anonymous") {
     const s = requireSession();
     if (body.trim().length < 10 || body.length > 1200)
       throw new Error("Write between 10 and 1,200 characters.");
@@ -373,6 +376,8 @@ export const mockRepo: KollabRepo = {
       category,
       body: body.trim(),
       alias: s.session.alias,
+      identity_mode: identityMode,
+      attribution_handle: identityMode === "attributed" ? s.session.handle : null,
       helpful_count: 0,
       comments: [],
       created_at: new Date().toISOString(),
@@ -381,7 +386,7 @@ export const mockRepo: KollabRepo = {
     write(s);
     return p;
   },
-  async comment(id, body) {
+  async comment(id, body, identityMode = "anonymous") {
     const s = requireSession();
     if (!body.trim() || body.length > 1200)
       throw new Error("Write a comment between 1 and 1,200 characters.");
@@ -392,6 +397,8 @@ export const mockRepo: KollabRepo = {
       id: crypto.randomUUID(),
       body: body.trim(),
       alias: s.session.alias,
+      identity_mode: identityMode,
+      attribution_handle: identityMode === "attributed" ? s.session.handle : null,
     });
     write(s);
   },

@@ -22,6 +22,7 @@ import {
   BrandContent,
 } from "./product-flows";
 import { repo } from "@/lib/data/provider";
+import { liveData } from "@/lib/data/mode";
 import {
   brandInput,
   type Brand,
@@ -307,27 +308,33 @@ export default function Kollab({
   initialSlug,
   initialTab = "discover",
   initialCategory = "All categories",
+  initialBrand = null,
+  initialReviews = [],
+  initialAggregates = null,
 }: {
   initialSlug?: string;
   initialTab?: string;
   initialCategory?: string;
+  initialBrand?: Brand | null;
+  initialReviews?: Review[];
+  initialAggregates?: Aggregates | null;
 }) {
   const [tab, setTab] = useState(initialTab),
     [category, setCategory] = useState(initialCategory),
     [entity, setEntity] = useState("all"),
     [brands, setBrands] = useState<Brand[]>([]),
-    [reviews, setReviews] = useState<Review[]>([]),
+    [reviews, setReviews] = useState<Review[]>(initialReviews),
     [saved, setSaved] = useState<Brand[]>([]),
     [session, setSession] = useState<Session | null>(null),
-    [loading, setLoading] = useState(true),
+    [loading, setLoading] = useState(!initialBrand),
     [error, setError] = useState(""),
     [version, setVersion] = useState(0),
     [modal, setModal] = useState<
       "review" | "add" | "auth" | "about" | "share" | "profile" | null
     >(null),
     [selected, setSelected] = useState<Brand | null>(null),
-    [detail, setDetail] = useState<Brand | null>(null),
-    [aggregates, setAggregates] = useState<Aggregates | null>(null),
+    [detail, setDetail] = useState<Brand | null>(initialBrand),
+    [aggregates, setAggregates] = useState<Aggregates | null>(initialAggregates),
     [toast, setToast] = useState(""),
     [notifications, setNotifications] = useState(false),
     [forceFail, setForceFail] = useState(false),
@@ -341,6 +348,7 @@ export default function Kollab({
     [previewAggregates, setPreviewAggregates] = useState<Aggregates | null>(
       null,
     );
+  const opinionQuery = useSearchQuery(communityQuery);
   useEffect(() => {
     const update = () => setVersion((v) => v + 1);
     window.addEventListener("kollab-change", update);
@@ -350,11 +358,11 @@ export default function Kollab({
     let live = true;
     Promise.all([
       repo.searchBrands(""),
-      repo.listReviews(),
+      repo.listReviews(undefined, liveData ? { q: opinionQuery } : undefined),
       repo.getWatchlist(),
       repo.getSession(),
       repo.getNotifications(),
-      repo.getBrandAggregates("demo-1"),
+      liveData ? Promise.resolve(null) : repo.getBrandAggregates("demo-1"),
     ])
       .then(([bs, rs, ws, s, ns, pa]) => {
         if (live) {
@@ -372,7 +380,7 @@ export default function Kollab({
     return () => {
       live = false;
     };
-  }, [version]);
+  }, [version, opinionQuery]);
   useEffect(() => {
     if (initialSlug)
       repo
@@ -385,7 +393,6 @@ export default function Kollab({
   }, [initialSlug]);
   useEffect(() => {
     if (detail) {
-      setAggregates(null);
       repo
         .getBrandAggregates(detail.id)
         .then(setAggregates)
@@ -430,9 +437,9 @@ export default function Kollab({
   useEffect(() => {
     const pop = () => {
       const slug = withoutBasePath(window.location.pathname).match(
-        /^\/(brand|agency)\/(.+)$/,
+        /^\/(brand|agency)\/([^/]+)\/?$/,
       )?.[2];
-      if (slug) repo.getBrand(slug).then(setDetail);
+      if (slug) repo.getBrand(decodeURIComponent(slug)).then(setDetail).catch(() => setError("Unable to load this brand."));
       else setDetail(null);
     };
     window.addEventListener("popstate", pop);
@@ -460,9 +467,10 @@ export default function Kollab({
   const startReview = (b?: Brand) => {
     setSelected(b || null);
     setReviewIntent(true);
-    setModal(session ? "review" : "auth");
+    setModal(session && (!liveData || session.verified) ? "review" : "auth");
   };
   const toggle = async (b: Brand) => {
+    if (liveData && !session) { setModal("auth"); return; }
     try {
       const active = await repo.toggleWatchlist(b.id);
       setToast(
@@ -474,11 +482,10 @@ export default function Kollab({
       setToast("Could not update watchlist. Please try again.");
     }
   };
-  const opinionQuery = useSearchQuery(communityQuery);
   const watchQuery = useSearchQuery(savedQuery);
   const communityMatches = searchItems(
     reviews,
-    opinionQuery,
+    liveData ? "" : opinionQuery,
     (r) =>
       `${brands.find((b) => b.id === r.brand_id)?.name || ""} ${r.body || ""} ${r.category} ${r.deal_type} ${r.payment_status} ${r.payment_status === "paid_late" ? "late payment slow payer" : r.payment_status === "paid_on_time" ? "on time payment" : ""} ${r.ghost_stage !== "none" ? "ghosted ghosting" : ""} ${r.usage_rights_requested ? "usage rights" : ""}`,
   );
@@ -580,10 +587,10 @@ export default function Kollab({
                     ) : (
                       <p>Follow brands to see new reviews here.</p>
                     )}
-                    <button onClick={() => repo.markNotificationsRead()}>
+                    <button onClick={() => repo.markNotificationsRead().catch(() => setToast("Could not mark notifications as read."))}>
                       Mark all as read
                     </button>
-                    <small>Local demo notifications</small>
+                    {!liveData && <small>Local demo notifications</small>}
                   </div>
                 )}
               </div>
@@ -645,6 +652,8 @@ export default function Kollab({
                   version={version}
                   onReview={() => startReview(detail)}
                   onShare={() => setModal("share")}
+                  initialReviews={initialBrand?.id === detail.id ? initialReviews : undefined}
+                  initialAggregates={initialBrand?.id === detail.id ? initialAggregates : undefined}
                 />
               </>
             ) : (
@@ -671,10 +680,16 @@ export default function Kollab({
                       />
                       <div className="hero-trust">
                         <Icon name="shield" size={15} />
-                        <span>Verified creators. Anonymous experiences.</span>
+                        <span>Verified creators. Your identity, your choice.</span>
                       </div>
                     </div>
-                    <div className="hero-art product-preview">
+                    {liveData ? <div className="hero-art product-preview live-preview">
+                      <div className="preview-heading"><span>The creator’s inside word</span><Icon name="shield" /></div>
+                      <h2>Better deals start with shared experiences.</h2>
+                      <p>Read a company’s collaboration record, share yours, and help creators ask for fairer terms.</p>
+                      <ul><li>Verify Instagram privately</li><li>Choose anonymous or @username</li><li>Share a first-hand collaboration</li></ul>
+                      <button onClick={() => startReview()}>Share your experience <Icon name="arrow" size={17} /></button>
+                    </div> : <div className="hero-art product-preview">
                       <div className="preview-heading">
                         <span>Sunday Theory</span>
                         <span className="demo-tag">Fictional demo</span>
@@ -713,7 +728,7 @@ export default function Kollab({
                       >
                         See the full picture <Icon name="arrow" size={17} />
                       </button>
-                    </div>
+                    </div>}
                   </section>
                 )}
                 {tab === "discover" && (
@@ -739,7 +754,7 @@ export default function Kollab({
                   <div className="activity-strip">
                     <span className="activity-dot" />
                     <span>
-                      <b>Demo community activity</b> · A{" "}
+                      <b>{liveData ? "Community activity" : "Demo community activity"}</b> · A{" "}
                       {reviews[0].follower_band.replaceAll("_", "–")}{" "}
                       {reviews[0].category.toLowerCase()} creator reported{" "}
                       {reviews[0].payment_status.replaceAll("_", " ")}.
@@ -962,7 +977,7 @@ export default function Kollab({
                           <span className="heading-dot">.</span>
                         </h2>
                         <p>
-                          Anonymous collaboration reports. No real names, ever.
+                          First-hand collaborations. Anonymous or shared with a verified username.
                         </p>
                       </div>
                       {tab === "discover" ? (
@@ -993,10 +1008,11 @@ export default function Kollab({
                         "Usage rights",
                       ]}
                     />
-                    <div className="demo-notice">
+                    {!liveData && <div className="demo-notice">
                       <span /> A peek at what’s possible. These sample reviews
                       feature fictional brands.
-                    </div>
+                    </div>}
+                    {liveData && !loading && !opinionQuery && !communityMatches.length && <div className="empty"><h3>The first experiences start here.</h3><p>Published creator reviews will appear after moderation.</p><button className="primary-button" onClick={() => startReview()}>Share a collaboration</button></div>}
                     {opinionQuery && !communityMatches.length && (
                       <div className="search-empty">
                         <h3>No experiences found for “{communityQuery}”.</h3>
@@ -1016,10 +1032,10 @@ export default function Kollab({
                       {communityMatches
                         .slice(0, tab === "discover" && !opinionQuery ? 2 : 100)
                         .map((r) => {
-                          const b = brands.find((b) => b.id === r.brand_id);
+                          const b = r.brand || brands.find((b) => b.id === r.brand_id);
                           return (
                             b &&
-                            (reviews.indexOf(r) <
+                            (liveData || reviews.indexOf(r) <
                             (!session
                               ? 1
                               : session.contributions
@@ -1104,8 +1120,7 @@ export default function Kollab({
                       Share your experience <Icon name="arrow" size={18} />
                     </button>
                     <span className="banner-privacy">
-                      <Icon name="shield" size={14} /> Always anonymous. Always
-                      useful.
+                      <Icon name="shield" size={14} /> Anonymous by default. Your choice to be named.
                     </span>
                   </section>
                 )}
@@ -1139,7 +1154,7 @@ export default function Kollab({
             </button>
           ))}
         </nav>
-        {process.env.NODE_ENV === "development" && (
+        {!liveData && process.env.NODE_ENV === "development" && (
           <div className="dev-toolbar">
             <span>◉ DEMO</span>
             <select
@@ -1242,12 +1257,12 @@ export default function Kollab({
                       setReviewIntent(true);
                     }}
                   />
-                ) : modal === "add" ? (
+                ) : modal === "add" && (!liveData || session?.verified) ? (
                   <AddBrand
                     onChoose={(b) => {
                       setSelected(b);
                       setReviewIntent(true);
-                      setModal(session ? "review" : "auth");
+                      setModal(session && (!liveData || session.verified) ? "review" : "auth");
                     }}
                   />
                 ) : modal === "review" ? (
@@ -1259,10 +1274,12 @@ export default function Kollab({
                       setModal(null);
                       choose(b);
                       setToast(
-                        "Your review is live. Thanks for paying it forward.",
+                        liveData ? "Your review is awaiting moderation. Thank you for sharing." : "Your review is live. Thanks for paying it forward.",
                       );
                     }}
                   />
+                ) : liveData && (modal === "auth" || modal === "add") ? (
+                  <><div className="modal-emblem">✳</div><h2>{session ? "Your creator account" : "Sign in to Kollab"}</h2><p>{session ? session.verified ? "Manage your creator profile and Instagram verification." : "Verify ownership of your Instagram account before contributing. Your handle stays private unless you choose to publish it." : "Sign in with an email link, then verify your Instagram account to share experiences."}</p><Link href="/account/" className="primary-button full">{session ? "Open your account" : "Continue with email"}</Link></>
                 ) : modal === "auth" ? (
                   <Auth
                     forceFail={forceFail}
@@ -1300,8 +1317,7 @@ export default function Kollab({
                     </p>
                     <div className="promise-list">
                       <p>
-                        <Icon name="shield" /> Your reviews never show your
-                        identity.
+                        <Icon name="shield" /> Your reviews are anonymous unless you choose to show your verified username.
                       </p>
                       <p>
                         <Icon name="heart" /> No brand-sponsored rankings. Ever.
@@ -1311,11 +1327,11 @@ export default function Kollab({
                         creators.
                       </p>
                     </div>
-                    <small>
+                    {!liveData && <small>
                       This is a front-end demo. Sign-in is simulated, data stays
                       in this browser, and sample reviews only feature fictional
                       brands.
-                    </small>
+                    </small>}
                   </>
                 )}
               </motion.section>
@@ -1418,7 +1434,7 @@ export function ReviewCard({
       {r.body && <p>{r.body}</p>}
       <div className="review-meta">
         <span>
-          <Icon name="shield" size={14} /> Anonymous creator
+          <Icon name="shield" size={14} /> {r.identity_mode === "attributed" && r.attribution_handle ? `@${r.attribution_handle}` : "Anonymous creator"}
         </span>
         <span>
           {r.follower_band.replaceAll("_", "–")} followers · {r.collab_month}
@@ -1438,7 +1454,7 @@ export function ReviewCard({
       </div>
       {r.reply && (
         <details>
-          <summary>Official brand response · demo</summary>
+          <summary>Official brand response{r.demo ? " · demo" : ""}</summary>
           <p>{r.reply}</p>
         </details>
       )}

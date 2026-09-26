@@ -2,6 +2,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { repo } from "@/lib/data/provider";
+import { liveData } from "@/lib/data/mode";
 import {
   dealTypes,
   followerBands,
@@ -16,6 +17,7 @@ import {
   type RateRow,
   type RoomPost,
   type FollowerBand,
+  type IdentityMode,
 } from "@/lib/data/types";
 import { ReviewCard } from "./kollab";
 import { ContentSearch, useSearchQuery } from "./content-search";
@@ -39,6 +41,24 @@ function ErrorText({ message }: { message: string }) {
       {message}
     </p>
   ) : null;
+}
+function IdentityChoice({ profile, mode, onChange, consent, onConsent }: {
+  profile: Session | null;
+  mode: IdentityMode;
+  onChange: (mode: IdentityMode) => void;
+  consent: boolean;
+  onConsent: (consent: boolean) => void;
+}) {
+  const mayAttribute = !!profile?.handle && (!liveData || profile.verified === true);
+  return <fieldset className="identity-choice">
+    <legend>How should this appear?</legend>
+    <label><input type="radio" checked={mode === "anonymous"} onChange={() => { onChange("anonymous"); onConsent(false); }} />
+      <span>Anonymous<small>Your Instagram handle stays private.</small></span></label>
+    <label><input type="radio" checked={mode === "attributed"} disabled={!mayAttribute} onChange={() => { onChange("attributed"); onConsent(false); }} />
+      <span>{mayAttribute ? `As @${profile.handle}` : "With my verified Instagram username"}<small>{mayAttribute ? "Your username will be visible to everyone." : "Verify Instagram in your account to use this option."}</small></span></label>
+    {mode === "attributed" && <label className="identity-consent"><input type="checkbox" checked={consent} onChange={(e) => onConsent(e.target.checked)} />
+      <span>I agree to publish my Instagram username with this contribution. Copies may remain public even if I remove it later.</span></label>}
+  </fieldset>;
 }
 function Gate({
   session,
@@ -65,7 +85,7 @@ function Gate({
         </h3>
         <p>
           {session
-            ? "Share your experience to see all reviews and rates."
+            ? liveData ? "An approved collaboration unlocks more reviews and rates. Complete Instagram verification in your account before submitting." : "Share your experience to see all reviews and rates."
             : "Sign in to read more. Contribute a collab to unlock rates."}
         </p>
         <button className="primary-button" onClick={onUnlock}>
@@ -96,8 +116,8 @@ export function ProfileSetup({ onDone }: { onDone: () => void }) {
     <>
       <h2>Make yourself at home.</h2>
       <p>
-        Your alias is for community discussions. Your Instagram handle never
-        appears publicly.
+        Your alias is for community discussions. Your Instagram handle only
+        appears when you explicitly choose to publish it.
       </p>
       <form onSubmit={save}>
         <label>
@@ -149,6 +169,8 @@ export function ProfileSetup({ onDone }: { onDone: () => void }) {
   );
 }
 const freshReview = (): NewReview => ({
+  identity_mode: "anonymous",
+  attribution_consent: false,
   brand_id: "",
   agency_id: null,
   collab_month: new Date().toISOString().slice(0, 7),
@@ -202,7 +224,9 @@ export function ReviewWizard({
       name: string;
       url: string;
       image: boolean;
+      file: File;
     } | null>(null),
+    [submitted, setSubmitted] = useState<Review | null>(null),
     [confirmed, setConfirmed] = useState(false),
     [profile, setProfile] = useState<Session | null>(null);
   const reduced = useReducedMotion();
@@ -261,7 +285,18 @@ export function ReviewWizard({
     setBusy(true);
     setError("");
     try {
-      await repo.createReview({ ...draft, brand_id: brand.id });
+      if (liveData && !profile?.verified) throw new Error("Verify your Instagram account before submitting a review.");
+      if (draft.identity_mode === "attributed" && !draft.attribution_consent) throw new Error("Confirm that you want your Instagram username to appear publicly.");
+      const review = submitted || await repo.createReview({ ...draft, brand_id: brand.id });
+      setSubmitted(review);
+      if (liveData && proof) {
+        const form = new FormData();
+        form.set("review_id", review.id);
+        form.set("file", proof.file);
+        const response = await fetch(appPath("/api/proofs/"), { method: "POST", body: form });
+        const result = await response.json();
+        if (!response.ok) throw new Error(`Your review is saved for moderation, but the proof upload failed. ${result.error || "Retry the upload or continue without proof."}`);
+      }
       onDone(brand);
     } catch (e) {
       setError(
@@ -286,6 +321,7 @@ export function ReviewWizard({
     region: null,
     reply: null,
     demo: false,
+    attribution_handle: draft.identity_mode === "attributed" ? profile?.handle || null : null,
   };
   const toggle = (
     key:
@@ -648,17 +684,22 @@ export function ReviewWizard({
                   <span>
                     ＋ Add private proof
                     <small>
-                      Optional · image or PDF · stays in memory only
+                      {liveData ? "Optional · JPEG, PNG or WebP · up to 4 MB" : "Optional · image or PDF · stays in memory only"}
                     </small>
                   </span>
                 )}
                 <input
                   type="file"
-                  accept="image/*,application/pdf"
+                  accept={liveData ? "image/jpeg,image/png,image/webp" : "image/*,application/pdf"}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
+                    if (file && liveData && (file.size > 4 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(file.type))) {
+                      setError("Choose a JPEG, PNG or WebP image no larger than 4 MB.");
+                      return;
+                    }
                     if (file)
                       setProof({
+                        file,
                         name: file.name,
                         url: URL.createObjectURL(file),
                         image: file.type.startsWith("image/"),
@@ -672,8 +713,7 @@ export function ReviewWizard({
                 </button>
               )}
               <small className="form-footnote">
-                Demo proof is not uploaded or verified. It will not earn a
-                verified badge.
+                {liveData ? "Proof is private and available only for moderation. Redact names, contact details and financial identifiers before uploading. Uploading alone does not earn a verified badge." : "Demo proof is not uploaded or verified. It will not earn a verified badge."}
               </small>
               <label className="toggle-row">
                 <span>I haven’t named or identified any individual.</span>
@@ -687,21 +727,22 @@ export function ReviewWizard({
           )}
           {step === 6 && brand && (
             <>
+              {!submitted && <IdentityChoice profile={profile} mode={draft.identity_mode || "anonymous"} onChange={(mode) => set("identity_mode", mode)} consent={!!draft.attribution_consent} onConsent={(consent) => set("attribution_consent", consent)} />}
               <p className="flow-intro">
-                Your name, handle, exact date, and proof are never on this card.
+                {draft.identity_mode === "attributed" ? `This review will show @${profile?.handle}.` : "This review will not show your name or Instagram handle."} Your exact date and private proof are not on this card.
               </p>
               <ReviewCard review={preview} brand={brand} />
               <small className="form-footnote">
-                New accounts have lower aggregate weight. Proof stays private
-                and is not uploaded in this demo.
+                {liveData ? "Your review will be checked by a moderator before publication. An approved review unlocks rates." : "Proof stays private and is not uploaded in this demo."}
               </small>
             </>
           )}
         </motion.div>
       </AnimatePresence>
       <ErrorText message={error} />
+      {submitted && liveData && <button className="outline-button" disabled={busy} onClick={() => brand && onDone(brand)}>Continue without proof</button>}
       <div className="wizard-actions">
-        {step > 0 ? (
+        {step > 0 && !submitted ? (
           <button
             className="outline-button"
             onClick={() => {
@@ -716,7 +757,7 @@ export function ReviewWizard({
         )}
         <button
           className="primary-button"
-          disabled={busy || (step === 5 && !confirmed)}
+          disabled={busy || (step === 5 && !confirmed) || (step === 6 && draft.identity_mode === "attributed" && !draft.attribution_consent)}
           onClick={() => {
             const issue = ready();
             if (issue) {
@@ -741,7 +782,7 @@ export function ReviewWizard({
             setStep(step + 1);
           }}
         >
-          {busy ? "Posting…" : step === 6 ? "Post your collab" : "Continue →"}
+          {busy ? "Saving…" : submitted ? "Retry proof upload" : step === 6 ? liveData ? "Submit for moderation" : "Post your collab" : "Continue →"}
         </button>
       </div>
     </>
@@ -753,16 +794,20 @@ export function BrandContent({
   version,
   onReview,
   onShare,
+  initialReviews = [],
+  initialAggregates = null,
 }: {
   brand: Brand;
   session: Session | null;
   version: number;
   onReview: () => void;
   onShare: () => void;
+  initialReviews?: Review[];
+  initialAggregates?: Aggregates | null;
 }) {
   const [tab, setTab] = useState("Overview"),
-    [reviews, setReviews] = useState<Review[]>([]),
-    [agg, setAgg] = useState<Aggregates | null>(null),
+    [reviews, setReviews] = useState<Review[]>(initialReviews),
+    [agg, setAgg] = useState<Aggregates | null>(initialAggregates),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
     [filters, setFilters] = useState({
@@ -847,8 +892,7 @@ export function BrandContent({
           ))}
         </div>
         <p>
-          At least 3 eligible reviews are needed for every statistic. Verified
-          receipts carry more weight.
+          {liveData ? 'Reputation percentages need at least 5 distinct creators. Payment amounts are available only through protected rate groups.' : 'At least 3 eligible reviews are needed for every statistic. Verified receipts carry more weight.'}
         </p>
       </section>
       <div className="brand-tabs">
@@ -891,7 +935,7 @@ export function BrandContent({
               <p>
                 {brand.demo
                   ? "Fictional sample reviews, for demonstration."
-                  : "First-hand reports, shared anonymously."}
+                  : "First-hand reports, shared anonymously or with a verified username."}
               </p>
             </div>
             <button className="primary-button" onClick={onReview}>
@@ -975,7 +1019,7 @@ export function BrandContent({
               </button>
             </div>
           )}
-          {tab === "Overview" && (
+          {tab === "Overview" && !liveData && (
             <div className="overview-detail">
               <h3>Payment behaviour over time</h3>
               <p>
@@ -1049,6 +1093,7 @@ export function RatesExplorer({
   const rateQuery = useSearchQuery(filters.q);
   useEffect(() => {
     let live = true;
+    if (liveData && !session?.contributions) { setRows([]); setLoading(false); setError(""); return; }
     setLoading(true);
     repo
       .getRates({
@@ -1079,6 +1124,7 @@ export function RatesExplorer({
     category,
     version,
     brandId,
+    session?.contributions,
   ]);
   function update(key: string, value: string) {
     const next = { ...filters, [key]: value };
@@ -1107,9 +1153,9 @@ export function RatesExplorer({
         value={filters.q}
         onChange={(q) => update("q", q)}
         label="Search rates"
-        placeholder="Search a brand, category, city, or deliverable…"
+        placeholder={liveData ? "Search a brand, category, or deliverable…" : "Search a brand, category, city, or deliverable…"}
         count={session?.contributions && !loading ? rows.length : undefined}
-        suggestions={["Beauty", "Reels", "Sunday Theory"]}
+        suggestions={liveData ? ["Beauty", "Reels", "Fashion"] : ["Beauty", "Reels", "Sunday Theory"]}
       />
       <div className="rate-filters">
         {!brandId && (
@@ -1166,7 +1212,7 @@ export function RatesExplorer({
             ))}
           </select>
         </label>
-        <label>
+        {!liveData && <label>
           City
           <select
             aria-label="City"
@@ -1179,7 +1225,7 @@ export function RatesExplorer({
             <option>Delhi</option>
             <option>Pune</option>
           </select>
-        </label>
+        </label>}
         <label>
           Deliverable
           <select
@@ -1232,22 +1278,20 @@ export function RatesExplorer({
               <span>Sample</span>
             </div>
             {rows.map((r) => (
-              <div className="rate-table-row" key={r.category}>
-                <b>{r.category}</b>
+              <div className="rate-table-row" key={[r.category, r.band, r.deal_type, r.deliverable, r.brand_id].join(":")}>
+                <b>{r.brand_name || r.category}{liveData && <small style={{display:'block',fontWeight:400}}>{[r.category,r.band?.replaceAll('_','–'),r.deliverable?.replaceAll('_',' '),r.deal_type?.replaceAll('_',' ')].filter(Boolean).join(' · ')}</small>}</b>
                 <strong>
                   {r.median === null ? "Not enough data yet" : money(r.median)}
                 </strong>
                 <span>
                   {r.min === null ? "—" : money(r.min) + " – " + money(r.max!)}
                 </span>
-                <span>n = {r.count}</span>
+                <span>{liveData ? `At least ${r.count} creators` : `n = ${r.count}`}</span>
               </div>
             ))}
           </div>
           <p className="table-note">
-            Medians are weighted by review trust. Every filtered group needs at
-            least 3 reviews. Demo rates reflect fictional collaborations; cash
-            refers to the agreed amount, not payment received.
+            {liveData ? "Rates use fixed groups of at least 5 distinct creators. Amounts are rounded and sample sizes are shown in bands to protect privacy. Cash refers to the agreed amount, not payment received." : "Medians are weighted by review trust. Every filtered group needs at least 3 reviews. Demo rates reflect fictional collaborations; cash refers to the agreed amount, not payment received."}
           </p>
         </>
       )}
@@ -1271,16 +1315,21 @@ export function Rooms({
     [roomQuery, setRoomQuery] = useState(""),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [identityMode, setIdentityMode] = useState<IdentityMode>("anonymous"),
+    [attributionConsent, setAttributionConsent] = useState(false),
+    [message, setMessage] = useState("");
+  const roomSearch = useSearchQuery(roomQuery);
   useEffect(() => {
+    let active = true;
     setLoading(true);
     repo
-      .listPosts(category)
-      .then(setPosts)
-      .catch(() => setError("Could not load the room. Please try again."))
-      .finally(() => setLoading(false));
-  }, [category, version]);
-  const roomSearch = useSearchQuery(roomQuery);
+      .listPosts(category, liveData ? roomSearch : undefined)
+      .then((result) => { if (active) { setPosts(result); setError(""); } })
+      .catch(() => active && setError("Could not load the room. Please try again."))
+      .finally(() => active && setLoading(false));
+    return () => { active = false; };
+  }, [category, version, roomSearch]);
   const matchingPosts = searchItems(
     posts,
     roomSearch,
@@ -1291,8 +1340,12 @@ export function Rooms({
     setBusy(true);
     setError("");
     try {
-      await repo.createPost(category, body);
+      if (identityMode === "attributed" && !attributionConsent) throw new Error("Confirm public attribution before posting.");
+      await repo.createPost(category, body, identityMode);
       setBody("");
+      setIdentityMode("anonymous");
+      setAttributionConsent(false);
+      setMessage(liveData ? "Submitted for moderation. Your post will appear after approval." : "Your post is saved in this demo.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not post.");
     } finally {
@@ -1304,7 +1357,7 @@ export function Rooms({
       <h1>
         {roomKey ? "Brand discussion" : "A room for your kind of creator."}
       </h1>
-      <p>Ask a question. Share a lesson. Keep people anonymous.</p>
+      <p>Ask a question. Share a lesson. Choose how your own identity appears, and respect other people’s privacy.</p>
       {!roomKey && (
         <div className="category-tabs">
           {cats.map((c) => (
@@ -1326,9 +1379,9 @@ export function Rooms({
         count={matchingPosts.length}
         suggestions={["Usage rights", "Payment", "Revisions"]}
       />
-      {session ? (
+      {session && (!liveData || session.verified) ? (
         <form className="room-composer" onSubmit={post}>
-          <label htmlFor="room-post">Posting as {session.alias}</label>
+          <label htmlFor="room-post">Your experience</label>
           <textarea
             id="room-post"
             required
@@ -1338,16 +1391,18 @@ export function Rooms({
             onChange={(e) => setBody(e.target.value)}
             placeholder="What’s on your mind? Avoid names and personal details."
           />
-          <button disabled={busy} className="primary-button">
-            {busy ? "Posting…" : "Post to the room"}
+          <IdentityChoice profile={session} mode={identityMode} onChange={setIdentityMode} consent={attributionConsent} onConsent={setAttributionConsent} />
+          <button disabled={busy || (identityMode === "attributed" && !attributionConsent)} className="primary-button">
+            {busy ? "Posting…" : liveData ? "Submit to the room" : "Post to the room"}
           </button>
         </form>
       ) : (
         <button className="outline-button" onClick={onSignIn}>
-          Sign in to join the conversation
+          {session ? "Verify Instagram to join the conversation" : "Sign in to join the conversation"}
         </button>
       )}
       <ErrorText message={error} />
+      {message && <p role="status">{message}</p>}
       {loading && !posts.length ? (
         <div className="skeleton" />
       ) : !matchingPosts.length ? (
@@ -1383,10 +1438,14 @@ function RoomCard({
   const [comment, setComment] = useState(""),
     [error, setError] = useState(""),
     [report, setReport] = useState(false),
-    [voted, setVoted] = useState(false);
+    [voted, setVoted] = useState(false),
+    [busy, setBusy] = useState(false),
+    [identityMode, setIdentityMode] = useState<IdentityMode>("anonymous"),
+    [attributionConsent, setAttributionConsent] = useState(false),
+    [message, setMessage] = useState("");
   return (
     <article className="room-card">
-      <small>{post.alias} · anonymous community member</small>
+      <small>{post.identity_mode === "attributed" && post.attribution_handle ? `@${post.attribution_handle} · verified creator` : `${post.alias || "Anonymous creator"} · anonymous community member`}</small>
       <p>{post.body}</p>
       <div className="room-actions">
         <button
@@ -1408,23 +1467,27 @@ function RoomCard({
       </div>
       {post.comments.map((c) => (
         <div className="comment" key={c.id}>
-          <small>{c.alias}</small>
+          <small>{c.identity_mode === "attributed" && c.attribution_handle ? `@${c.attribution_handle}` : c.alias || "Anonymous creator"}</small>
           <p>{c.body}</p>
         </div>
       ))}
-      {session && (
+      {session && (!liveData || session.verified) && (
         <form
-          className="comment-form"
+          className="comment-form identity-comment-form"
           onSubmit={async (e) => {
             e.preventDefault();
+            setBusy(true); setError(""); setMessage("");
             try {
-              await repo.comment(post.id, comment);
+              if (identityMode === "attributed" && !attributionConsent) throw new Error("Confirm public attribution before replying.");
+              await repo.comment(post.id, comment, identityMode);
               setComment("");
+              setIdentityMode("anonymous"); setAttributionConsent(false);
+              setMessage(liveData ? "Your reply is awaiting moderation." : "Reply saved.");
             } catch (e) {
               setError(
                 e instanceof Error ? e.message : "Could not add comment.",
               );
-            }
+            } finally { setBusy(false); }
           }}
         >
           <input
@@ -1435,10 +1498,12 @@ function RoomCard({
             required
             maxLength={1200}
           />
-          <button>Reply →</button>
+          <IdentityChoice profile={session} mode={identityMode} onChange={setIdentityMode} consent={attributionConsent} onConsent={setAttributionConsent} />
+          <button disabled={busy || (identityMode === "attributed" && !attributionConsent)}>{busy ? "Saving…" : "Reply →"}</button>
         </form>
       )}
       <ErrorText message={error} />
+      {message && <p role="status">{message}</p>}
       {report && (
         <ReportDialog targetId={post.id} onClose={() => setReport(false)} />
       )}
@@ -1467,8 +1532,7 @@ export function ReportDialog({
       <h3>{done ? "Report saved" : "Report this content"}</h3>
       {done ? (
         <p>
-          Your report is saved locally for this demo. A live moderation team is
-          not connected.
+          {liveData ? "Your report has been sent to the moderation queue. Thank you for helping keep Kollab useful." : "Your report is saved locally for this demo. A live moderation team is not connected."}
         </p>
       ) : (
         <>
@@ -1563,7 +1627,7 @@ export function ShareCard({
         <strong>{value}</strong>
         <p>
           {sample || 0} reviews ·{" "}
-          {brand?.demo || !brand
+          {!liveData && (brand?.demo || !brand)
             ? "Includes fictional demo data"
             : "Creator reported"}
         </p>

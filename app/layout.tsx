@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./glass.css";
 import "./wordmark-backdrop.css";
+import "./operations.css";
 export const metadata: Metadata = {
   title: "Kollab — Check a brand before you sign.",
   description:

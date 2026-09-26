@@ -169,7 +169,7 @@ export function ReviewDetail({
             </p>
           )}
           <div className="review-focus-identity">
-            <span>◇ Anonymous creator</span>
+            <span>◇ {r.identity_mode === 'attributed' && r.attribution_handle ? `@${r.attribution_handle}` : 'Anonymous creator'}</span>
             <span>
               {r.follower_band.replaceAll("_", "–")} followers · {r.category}
             </span>

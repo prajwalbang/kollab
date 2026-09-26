@@ -9,6 +9,7 @@ export const followerBands = [
   "over_100k",
 ] as const;
 export type FollowerBand = (typeof followerBands)[number];
+export type IdentityMode = "anonymous" | "attributed";
 export const dealTypes = [
   "barter",
   "paid",
@@ -84,6 +85,8 @@ export type Deliverables = {
   event_attendance: number;
 };
 export const reviewInput = z.object({
+  identity_mode: z.enum(["anonymous", "attributed"]).optional(),
+  attribution_consent: z.boolean().optional(),
   brand_id: z.string().min(1),
   agency_id: z.string().nullable(),
   collab_month: z.string().regex(/^\d{4}-\d{2}$/),
@@ -149,6 +152,9 @@ export type Review = Omit<
   CollabReview,
   "user_id" | "created_at" | "edited_at" | "removed_reason"
 > & {
+  attribution_handle?: string | null;
+  author_alias?: string;
+  brand?: Brand;
   follower_band: FollowerBand;
   category: string;
   region: string | null;
@@ -156,6 +162,7 @@ export type Review = Omit<
   demo: boolean;
 };
 export type Session = {
+  role?: 'creator' | 'brand_rep' | 'moderator' | 'admin';
   id: string;
   alias: string;
   handle: string;
@@ -163,8 +170,10 @@ export type Session = {
   follower_band: FollowerBand;
   category: string;
   city: string | null;
+  verified?: boolean;
 };
 export type ReviewFilters = {
+  q?: string;
   band?: string;
   category?: string;
   deal_type?: string;
@@ -190,7 +199,12 @@ export type Aggregates = {
   product_actual_value: number | null;
 };
 export type RateRow = {
+  brand_name?: string;
   category: string;
+  band?: string;
+  deal_type?: string;
+  deliverable?: string;
+  brand_id?: string | null;
   count: number;
   min: number | null;
   max: number | null;
@@ -201,8 +215,10 @@ export type RoomPost = {
   category: string;
   body: string;
   alias: string;
+  identity_mode?: IdentityMode;
+  attribution_handle?: string | null;
   helpful_count: number;
-  comments: { id: string; body: string; alias: string }[];
+  comments: { id: string; body: string; alias: string; identity_mode?: IdentityMode; attribution_handle?: string | null }[];
   created_at: string;
 };
 export type Notification = {

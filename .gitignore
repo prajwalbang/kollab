@@ -2,5 +2,9 @@ node_modules
 .next
 out
 *.tsbuildinfo
+.env*
+!.env.example
+.vercel/
+supabase/.temp/
 # Local creator research data. Keep this file on disk and out of the public repo.
 indian_microcreators_master.csv

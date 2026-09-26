@@ -1,10 +1,7 @@
-import Kollab from "@/components/kollab";
-import brands from "@/data/brands.json";
-
-export function generateStaticParams() {
-  return brands
-    .filter((brand) => brand.entity_type === "agency")
-    .map((brand) => ({ slug: brand.slug }));
+import { CompanyPage, companyMetadata } from "@/lib/data/company-page";
+export const dynamic = "force-dynamic";
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  return companyMetadata((await params).slug, "agency");
 }
 
 export default async function Page({
@@ -13,5 +10,5 @@ export default async function Page({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return <Kollab initialSlug={slug} />;
+  return <CompanyPage slug={slug} entity="agency" />;
 }
