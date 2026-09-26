@@ -2,7 +2,7 @@
 
 Creator collaboration directory built with Next.js, React and TypeScript. Permanent light glass UI, mobile navigation, searchable company profiles, reviews, rates, rooms and saved companies.
 
-The repository now includes a Supabase implementation alongside the original local demo. **Hosted activation is still pending.** No real database credentials are required for demo mode.
+The repository includes a Supabase implementation alongside the original local demo. **The database and application are deployed; public sign-in activation is still pending.** No real database credentials are required for demo mode. See [deployment status](docs/DEPLOYMENT.md).
 
 ## Run locally
 

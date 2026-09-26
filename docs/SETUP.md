@@ -1,10 +1,10 @@
 # Connecting the hosted app
 
-The code is ready for staging verification. No migration has been applied to the hosted Supabase project by this development session. Keep Production in `demo` until the tests below pass on a separate staging project/deployment. Vercel environment screenshots confirm variable names, not their values or connectivity.
+The hosted Kollab database is deployed. See [the deployment record](DEPLOYMENT.md) for applied migrations and checks. Production remains in `demo` while email delivery, CAPTCHA and real sign-in testing are pending. The instructions below also describe setup for a fresh staging project.
 
 ## 1. Database
 
-Use the Supabase SQL editor as project owner, or a locally authenticated Supabase CLI. Apply **all six migrations in filename order** from `supabase/migrations/`. They create objects and are not intended to be rerun. Each migration runs in a transaction. Do not apply blindly over an earlier partially installed schema; check migration history first.
+For a fresh project, use the Supabase SQL editor as project owner, or an authenticated Supabase CLI. Apply **all seven migrations in filename order** from `supabase/migrations/`. They create objects and are not intended to be rerun. Each migration runs in a transaction. Kollab's hosted project already has them; do not reapply. Local version/name pairs match its migration history.
 
 `private` must **not** be in Data API exposed schemas. Keep automatic table exposure off and automatic RLS on. The `public` schema contains explicitly granted RPC functions; all application tables are private, have RLS enabled, and have no client table grants. Authorization runs inside RPCs as well as in website routes. Supabase Auth and Storage schemas must already exist.
 
@@ -74,4 +74,4 @@ Schedule daily, monitor failures, and test with an expired test image. Up to 10,
 
 Choose a support/appeals contact; finish privacy notice, terms, community policy and account export/deletion workflow. Establish moderator coverage and escalation rules. Configure request/firewall limits, SMTP monitoring, backup/restore testing and alerting that redacts tokens and personal data. Review accessibility and have an independent security review before a broad public launch.
 
-GitHub Pages cannot run these server routes. The old static-export workflow is removed; Vercel is the application host. GitHub Actions now runs tests/builds. This change does not itself push or deploy code, apply SQL, or switch the hosted site to live mode.
+GitHub Pages cannot run these server routes. The old static-export workflow is removed; Vercel is the application host. GitHub Actions runs tests/builds. The application has been pushed and deployed, and database migrations have been applied separately. Live mode has not been enabled.
